@@ -1,0 +1,26 @@
+{
+  "name": "kenkyuunarou",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiromuu/kenkyuunarou.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hiromuu/kenkyuunarou/issues"
+  },
+  "homepage": "https://github.com/hiromuu/kenkyuunarou#readme",
+  "devDependencies": {
+    "hardhat": "^2.15.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.9.1"
+  }
+}
