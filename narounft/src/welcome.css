@@ -1,0 +1,30 @@
+.novels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .novel-tile {
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 0.5rem;
+  }
+  
+  /* Add the rest of your styles here */
+  .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0,0,0,0.5);
+  }
+  
+  .popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+  }  
