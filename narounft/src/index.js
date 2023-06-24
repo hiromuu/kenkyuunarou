@@ -1,14 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter as Router, Route } from 'react-router-dom';
-import Login from './Login';
-import Welcome from './Welcome';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './login';
+import Welcome from './welcome';
 
 const App = () => {
   return (
     <Router>
-      <Route path="/" exact component={Login} />
-      <Route path="/welcome" component={Welcome} />
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/welcome" element={<Welcome />} />
+      </Routes>
     </Router>
   );
 };

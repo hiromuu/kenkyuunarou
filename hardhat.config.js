@@ -29,3 +29,7 @@ module.exports = {
   },
   solidity: "0.8.9",
 };
+
+// npx hardhat mint --network mumbai --contract 0x6291aF1936A4C0Cac9C1A7F07cFE6eB533EbCd72 --to 0x6291aF1936A4C0Cac9C1A7F07cFE6eB533EbCd72 --tokenURI https://nftimagenarou.s3.ap-northeast-1.amazonaws.com/metadata.json
+// token.mintNFT("0x6291aF1936A4C0Cac9C1A7F07cFE6eB533EbCd72", "https://nftimagenarou.s3.ap-northeast-1.amazonaws.com/metadata.json");
+// 0xD877a26eBa98A1747Ce783BE7b34b2CE3361B298
