@@ -1,59 +1,55 @@
 import React, { useState } from 'react';
-import './welcome.css';  // Don't forget to import the CSS file
+import './welcome.css';
+
+const novels = [...Array(50)].map((_, i) => {
+  const points = i < 25 ? -25 + i : 1 + i % 25;
+  return {
+    id: i,
+    title: `小説 ${i + 1}`,
+    description: "これはダミーテキストです。",
+    points,
+  };
+});
 
 const Welcome = () => {
-  const points = 1000;  // Dummy points data
+  const [points, setPoints] = useState(0);
+  const [activeNovel, setActiveNovel] = useState(null);
 
-  // Dummy novels data
-  const novels = Array.from({ length: 50 }, (_, i) => ({
-    title: `Novel ${i + 1}`,
-    description: 'This is a wonderful novel.', // Dummy description
-    points: 100  // Dummy points
-  }));
-
-  const [selectedNovel, setSelectedNovel] = useState(null);
-
-  const handleNovelClick = (novel) => {
-    setSelectedNovel(novel);
+  const openPopup = (novel) => {
+    setActiveNovel(novel);
   };
 
   const closePopup = () => {
-    setSelectedNovel(null);
+    setActiveNovel(null);
   };
-  
 
   return (
-    <div className="container">
-      <header className="top-bar">
-        <button className="purchase-button">NFTを購入する</button>
-        <p>現在のポイントは{points}</p>
-      </header>
-
-      <main className="content-field">
-        <div className="novels-grid">
-          {novels.map((novel, index) => (
-            <div key={index} className="novel-tile" onClick={() => handleNovelClick(novel)}>
-              {novel.title}
-            </div>
-          ))}
-        </div>
-      </main>
-
-      <footer className="footer">
-        XXXXX
-      </footer>
-
-      {selectedNovel && (
-      <div className="popup">
-        <div className="popup-content">
-          <h2>{selectedNovel.title}</h2>
-          <p>{selectedNovel.description}</p>
-          <p>{selectedNovel.points}ポイント取得</p>
-          <button>購読する</button>
-          <button onClick={closePopup}>閉じる</button>
-        </div>
+    <div>
+      <div className="top-bar">
+        <button onClick={() => setPoints(points + 10)}>NFTを購入する</button>
+        <p>現在のポイントは {points}</p>
       </div>
-    )}
+
+      <div className="content-field">
+        {novels.map((novel) => (
+          <div className="tile" key={novel.title} onClick={() => openPopup(novel)}>
+            <h3>{novel.title}</h3>
+            <p className="points">{novel.points}P</p>
+          </div>
+        ))}
+      </div>
+
+      {activeNovel && (
+        <div className="popup">
+          <button className="close-btn" onClick={closePopup}>閉じる</button>
+          <h2>{activeNovel.title}</h2>
+          <p>{activeNovel.description}</p>
+          <p>{activeNovel.points}P</p>
+          <button onClick={() => { setPoints(points + activeNovel.points); closePopup(); }}>購読する</button>
+        </div>
+      )}
+
+      <div className="footer">XXXXX</div>
     </div>
   );
 };
