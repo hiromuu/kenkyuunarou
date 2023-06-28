@@ -37,7 +37,7 @@ const Login = () => {
         const owner = await nftContract.methods.ownerOf(tokenId).call();
         if (web3.utils.toChecksumAddress(account) === owner) {
           console.log('You are the owner of this NFT!');
-          navigate('/welcome'); // Redirect to the welcome page using React Router's navigate
+          navigate('/welcome', { state: { account } }); // Redirect to the welcome page using React Router's navigate
           return;
         } else {
           checkToken(tokenId + 1);
