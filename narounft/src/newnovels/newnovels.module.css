@@ -1,0 +1,45 @@
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: #fafafa;
+    border-bottom: 1px solid #eaeaea;
+}
+  
+.contentField {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+.pointInputs {
+    display: flex;
+    justify-content: space-between;
+    width: 80%;
+    margin-top: 20px; 
+}
+
+.titleField,
+.summaryField,
+.contentField {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    margin: 0 10%; 
+}
+
+.titleField h1,
+.summaryField h2,
+.contentField h3 {
+    font-size: larger; /* Adjust as needed */
+}
+
+.titleField input,
+.summaryField textarea,
+.contentField textarea {
+    width: 100%; /* Adjust as needed */
+}

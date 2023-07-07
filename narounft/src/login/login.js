@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Web3 from 'web3';
-import nftContractABI from './contractabi.js';
+import nftContractABI from '../contractabi.js';
 import { useNavigate } from 'react-router-dom'; // 追加
 
 const Login = () => {
