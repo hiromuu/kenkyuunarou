@@ -37,7 +37,7 @@ const EditNovel = () => {
       copyrightPoints
     };
     // Firestoreの該当する小説のデータを更新
-    db.collection('novels').doc(location.state.novel.id).set(novelData)
+    db.collection('novels').doc(location.state.novel.id).update(novelData)
     .then(() => {
       // データ更新後、小説リスト画面に戻る
       navigate('/novellist', { state: { account: location.state.account } });

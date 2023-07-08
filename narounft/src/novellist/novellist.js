@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './novellist.css';
 import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore'; 
-import { useLocation, Link ,useNavigate} from 'react-router-dom';
+import { useLocation ,useNavigate} from 'react-router-dom';
 
 
 const db = firebase.firestore()

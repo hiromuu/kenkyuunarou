@@ -6,6 +6,7 @@ import Welcome from './welcome/welcome';
 import NovelList from './novellist/novellist';
 import NewNovel from './newnovels/newnovels';
 import Editnovel from './editnovel/editnovel';
+import NovelDetails from './noveldetail/noveldetail';
 
 const App = () => {
   return (
@@ -16,6 +17,7 @@ const App = () => {
         <Route path="/novellist" element={<NovelList />} />
         <Route path="/newnovels" element={< NewNovel />} />
         <Route path="/editnovel" element={< Editnovel />} />
+        <Route path="/noveldetails" element={<NovelDetails />} />
       </Routes>
     </Router>
   );

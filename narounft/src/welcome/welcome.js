@@ -67,7 +67,14 @@ const Welcome = () => {
   const closeNFTPopup = () => {
     setActiveNFT(null);
   };
-  
+  const handlePurchase = async () => {
+    try {
+      await purchaseItem(activeNovel.subscriptionPoints, '購読');
+      navigate('/noveldetails', { state: { novel: activeNovel, account } });
+    } catch (error) {
+      // Handle any errors here
+    }
+  };
 
   const purchaseItem = async (itemCost, itemType) => {
     if (points < itemCost) {
@@ -124,7 +131,7 @@ const Welcome = () => {
         <p>購読ポイント: {activeNovel.subscriptionPoints}P</p>
         <p>小説購入ポイント: {activeNovel.copyrightPoints}P</p>
         <p>{activeNovel.summary}</p>
-        <button onClick={() => purchaseItem(activeNovel.subscriptionPoints, '購読')}>購読する</button>
+        <button onClick={handlePurchase}>購読する</button>
         <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
       </div>
       )}
