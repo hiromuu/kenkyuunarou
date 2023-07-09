@@ -20,13 +20,16 @@ const Welcome = () => {
   const account = location.state.account;
   const navigate = useNavigate();
 
+  const [, setSubscribedNovels] = useState([]);
+
   useEffect(() => {
     const userRef = db.collection('users').doc(account);
     userRef.get().then((doc) => {
       if (doc.exists) {
         setPoints(doc.data().points);
+        setSubscribedNovels(doc.data().subscribedNovels || []);  // Add this line
       } else {
-        userRef.set({ points: 0 });
+        userRef.set({ points: 0, subscribedNovels: [] });  // Add subscribedNovels: [] here
       }
     });
   }, [account]);
@@ -34,11 +37,13 @@ const Welcome = () => {
   useEffect(() => {
     const fetchNovels = async () => {
       const novelCollection = await db.collection('novels').get();
-      const novelData = novelCollection.docs.map((doc) => doc.data());
+      const novelData = novelCollection.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
       setNovels(novelData);
     };
     fetchNovels();
-  }, []);
+  }, [])
+
+  
 
   const buyNFT = () => {
     setActiveNFT({title: 'NFT Title', description: 'NFT Description', points: -30});
@@ -67,15 +72,31 @@ const Welcome = () => {
   const closeNFTPopup = () => {
     setActiveNFT(null);
   };
-  const handlePurchase = async () => {
+  const handleNovelPurchase = async () => {
     try {
-      await purchaseItem(activeNovel.subscriptionPoints, '購読');
-      navigate('/noveldetails', { state: { novel: activeNovel, account } });
+      // Purchase the novel
+      await purchaseItem(activeNovel.copyrightPoints, '小説購入');
+      
+      // Update the novel's owner in the novels collection
+      const novelDoc = db.collection('novels').doc(activeNovel.id);
+      await novelDoc.update({ userId: account });
+  
+      // Remove the novel from the previous owner's ownedNovels array
+      const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
+      await previousOwnerDoc.update({
+        ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id)
+      });
+  
+      // Add the novel to the new owner's ownedNovels array
+      const userDoc = db.collection('users').doc(account);
+      await userDoc.update({
+        ownedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
+      });
     } catch (error) {
-      // Handle any errors here
+      setErrorMessage(`小説の購入中にエラーが発生しました: ${error.message}`);
     }
   };
-
+  
   const purchaseItem = async (itemCost, itemType) => {
     if (points < itemCost) {
       setErrorMessage(`ポイントが足りません！ ${itemType}には${itemCost}Pが必要です。`);
@@ -84,23 +105,23 @@ const Welcome = () => {
       setActiveNovel(null);
       alert(`${itemType}を購入しました`);
       const userDoc = db.collection('users').doc(account); // Firestoreのドキュメント参照を取得
-      await userDoc.update({points: points - itemCost}); 
+      await userDoc.update({points: points - itemCost});
+      console.log("itemtypeを判断する");
+      console.log(itemType);
   
-      if (itemType === '小説購入') {
-        // 小説の所有者のIDを更新
-        const novelDoc = db.collection('novels').doc(activeNovel.id);
-        await novelDoc.update({owner: account});
-  
-        // 元の所有者のownedNovelsから小説を削除
-        const originalOwnerDoc = db.collection('users').doc(activeNovel.owner);
-        await originalOwnerDoc.update({
-          ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id)
-        });
-  
-        // 新しい所有者のownedNovelsに小説を追加
-        await userDoc.update({
-          ownedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
-        });
+      // Transfer points to the author if it's a novel purchase
+      if (itemType === '小説を購入する') {
+        console.log("小説を購入");
+        console.log(activeNovel.userId);
+        const authorDoc = db.collection('users').doc(activeNovel.userId);
+        const authorDocData = await authorDoc.get();
+        if (authorDocData.exists) {
+          console.log("authorDocData.exists");
+          const authorPoints = authorDocData.data().points;
+          console.log(authorPoints);
+          console.log(itemCost);
+          await authorDoc.update({ points: authorPoints + itemCost });
+        }
       }
     }
   };
@@ -115,11 +136,11 @@ const Welcome = () => {
 
       <div className={styles.contentfield}>
       {novels.map((novel) => (
-          <div className="tile" key={novel.title} onClick={() => openPopup(novel)}>
+        <div className="tile" key={novel.id} onClick={() => openPopup(novel)}>
             <h3>{novel.title}</h3>
             <p className="points">購読ポイント: {novel.subscriptionPoints}P</p>
             <p className="points2">小説購入ポイント: {novel.copyrightPoints}P</p>
-          </div>
+        </div>
         ))}
       </div>
 
@@ -131,7 +152,7 @@ const Welcome = () => {
         <p>購読ポイント: {activeNovel.subscriptionPoints}P</p>
         <p>小説購入ポイント: {activeNovel.copyrightPoints}P</p>
         <p>{activeNovel.summary}</p>
-        <button onClick={handlePurchase}>購読する</button>
+        <button onClick={handleNovelPurchase}>購読する</button>
         <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
       </div>
       )}

@@ -21,20 +21,21 @@ const NewNovel = () => {
       title,
       summary,
       content,
-      subscriptionPoints, // added
-      copyrightPoints, // added
-      userId: account, 
+      subscriptionPoints,
+      copyrightPoints,
+      userId: account,
     };
-    // Save the new novel to Firestore Database
+
     db.collection('novels').add(novelData)
     .then((docRef) => {
-      // Add the novel id to the user's ownedNovels
+      docRef.update({
+        novelId: docRef.id
+      });
       const userRef = db.collection('users').doc(account);
       userRef.update({
         ownedNovels: firebase.firestore.FieldValue.arrayUnion(docRef.id)
       });
 
-      // Redirect to Novel List page after saving
       navigate('/novellist', { state: { account } });
     }).catch((error) => {
       console.error("Error adding novel: ", error);

@@ -7,17 +7,16 @@
 }
 
 .contentfield {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap:0px;
+  display: grid;  /* Change from flex to grid */
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));  /* This will create a responsive grid layout */
+  gap: 20px; 
 }
 
 .tile {
-  width: calc(33.33% - 10px);
+  width: calc(33.33% - 40px);
   background-color: #f0f0f0;
   margin-bottom: 15px;
-  padding: 20px;
+  padding: 40px;
   box-sizing: border-box;
   cursor: pointer;
   position: relative;
@@ -80,6 +79,21 @@
   background-color: #f8f8f8;
   text-align: center;
 }
+
 .purchase-btn {
   margin: 10px 0; /* ボタン間のマージンを追加 */
+}
+
+/* Screen width 600px and below */
+@media (max-width: 600px) {
+  .tile {
+    width: calc(100% - 20px);
+  }
+}
+
+/* Screen width 900px and below */
+@media (max-width: 900px) {
+  .tile {
+    width: calc(50% - 20px);
+  }
 }

@@ -16,7 +16,7 @@ const NovelList = () => {
   const userRef = db.collection('users').doc(account);
 
   useEffect(() => {
-    userRef.get().then((doc) => { // Firestoreのドキュメントを取得
+    userRef.get().then((doc) => {
       if (doc.exists) {
         setPoints(doc.data().points);
         const novelIDs = doc.data().ownedNovels || [];
@@ -25,13 +25,14 @@ const NovelList = () => {
           return novelRef.get();
         });
         Promise.all(novelPromises).then((novels) => {
-          setOwnedNovels(novels.map((novel) => novel.data()));
+          const validNovels = novels.map((novel) => ({id: novel.id, ...novel.data()})).filter((novel) => novel); // Validate novels
+          setOwnedNovels(validNovels);
         });
       } else {
         userRef.set({ points: 0 });
       }
     });
-
+  
     return () => {};
   }, [account, userRef]);
 
