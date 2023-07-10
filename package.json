@@ -25,7 +25,6 @@
   "dependencies": {
     "@nomicfoundation/hardhat-toolbox": "^1.0.2",
     "@openzeppelin/contracts": "^4.9.1",
-    "firebase": "^9.23.0",
-    "web3": "^4.0.1"
+    "firebase": "^9.23.0"
   }
 }
