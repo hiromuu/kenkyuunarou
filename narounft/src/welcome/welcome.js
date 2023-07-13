@@ -168,7 +168,7 @@ const Welcome = () => {
   return (
     <div>
       <div className={styles.topbar}>
-        <button onClick={buyNFT}>NFTを購入する</button>
+        <button onClick={buyNFT}>未実装</button>
         <button onClick={() => navigate('/novellist', { state: { account } })}>NovelListへ</button>
         <p>現在のポイントは {points}</p>
       </div>
