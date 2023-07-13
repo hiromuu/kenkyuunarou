@@ -5,11 +5,8 @@ import 'firebase/compat/firestore';
 import firebaseConfig from '../firebaseconfig/firebaseconfig';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styles from './welcome.module.css';
-import { ethers } from "ethers";
-// MetaMaskのプロバイダを取得します。
-const provider = new ethers.providers.Web3Provider(window.ethereum);
 
-let web3;
+let web3 = new Web3(window.ethereum);
 
 if (window.ethereum) {
   web3 = new Web3(window.ethereum);
@@ -48,7 +45,7 @@ const Welcome = () => {
         setPoints(doc.data().points);
         setSubscribedNovels(doc.data().subscribedNovels || []);  // Update this line
       } else {
-        userRef.set({ points: 0, subscribedNovels: [] });  // Add subscribedNovels: [] here
+        userRef.set({ points: 20, subscribedNovels: [] });  // Add subscribedNovels: [] here
       }
     });
   }, [account]);
@@ -69,7 +66,7 @@ const Welcome = () => {
     const tx = {
       from: sender,
       to: recipient,
-      value: web3.utils.toWei(amountInMATIC, 'mwei') // Convert from MATIC to wei
+      value: web3.utils.toWei(amountInMATIC) // Convert from MATIC to wei
     };
   
     try {
@@ -115,75 +112,56 @@ const Welcome = () => {
   const closeNFTPopup = () => {
     setActiveNFT(null);
   };
-  const handleNovelPurchase = async () => {
-    try {
-      // Purchase the novel
-      await purchaseItem(activeNovel.copyrightPoints, '小説購入');
-  
-      // ここでEtherの送信を行います。
-      const signer = provider.getSigner();
-      const tx = await signer.sendTransaction({
-        to: activeNovel.userId, // このアドレスは小説の作者のアドレスです。
-        value: ethers.utils.parseEther("0.001"), // 0.001 ETH を送信します。
-      });
-      await tx.wait(); // トランザクションが確定するまで待ちます。
-  
-      // Update the novel's owner in the novels collection
-      const novelDoc = db.collection('novels').doc(activeNovel.id);
-      await novelDoc.update({ userId: account });
-  
-      // Remove the novel from the previous owner's ownedNovels array
-      const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
-      await previousOwnerDoc.update({
-        ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id)
-      });
-  
-      // Add the novel to the new owner's ownedNovels array
-      const userDoc = db.collection('users').doc(account);
-      await userDoc.update({
-        ownedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
-      });
-  
-      // 購読成功後、小説のページへ飛びます。
-      navigate(`/novel/${activeNovel.id}`);
-    } catch (error) {
-      setErrorMessage(`小説の購入中にエラーが発生しました: ${error.message}`);
-    }
-  };
   
   const purchaseItem = async (itemCost, itemType) => {
     if (points < itemCost) {
       setErrorMessage(`ポイントが足りません！ ${itemType}には${itemCost}Pが必要です。`);
     } else {
       setPoints(prevPoints => prevPoints - itemCost);
-      setActiveNovel(null);
-      alert(`${itemType}を購入しました`);
+      alert(`${itemType}`);
       const userDoc = db.collection('users').doc(account); // Firestoreのドキュメント参照を取得
-      await userDoc.update({points: points - itemCost});
+      await userDoc.update({points: points - itemCost,subscribedNovels: activeNovel.id });
+      console.log(itemCost);
       console.log("itemtypeを判断する");
       console.log(itemType);
   
       // Send MATIC transaction here.
-      const maticAmount = itemCost / 1000; // Assuming 1 point = 0.001 MATIC.
-      await sendMATIC(account, maticAmount);
+      const maticAmount = parseFloat(itemCost) / 1000; // 
+      console.log(maticAmount);
+      await sendMATIC(activeNovel.userId, maticAmount);
+
+      console.log(activeNovel.userId);
+      const authorDoc = db.collection('users').doc(activeNovel.userId);
+      const authorDocData = await authorDoc.get();
+      console.log("authorDocData.exists");
+      const authorPoints = authorDocData.data().points;
+      console.log(authorPoints);
+      console.log(itemCost);
+      await authorDoc.update({ points: authorPoints + itemCost });
   
       // Transfer points to the author if it's a novel purchase
       if (itemType === '小説を購入する') {
         console.log("小説を購入");
-        console.log(activeNovel.userId);
-        const authorDoc = db.collection('users').doc(activeNovel.userId);
-        const authorDocData = await authorDoc.get();
-        if (authorDocData.exists) {
-          console.log("authorDocData.exists");
-          const authorPoints = authorDocData.data().points;
-          console.log(authorPoints);
-          console.log(itemCost);
-          await authorDoc.update({ points: authorPoints + itemCost });
-  
-          // Send MATIC transaction here as well.
-          await sendMATIC(activeNovel.userId, maticAmount);
-        }
+        
+           // Update the novel's owner in the novels collection
+          const novelDoc = db.collection('novels').doc(activeNovel.id);
+          await novelDoc.update({ userId: account });
+      
+          // Remove the novel from the previous owner's ownedNovels array
+          const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
+          await previousOwnerDoc.update({
+            ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id)
+          });
+      
+          // Add the novel to the new owner's ownedNovels array
+          const userDoc = db.collection('users').doc(account);
+          await userDoc.update({
+            ownedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
+          });
       }
+      const tempActiveNovel = activeNovel;
+      setActiveNovel(null);
+      navigate('/noveldetails', { state: { account ,novel: tempActiveNovel} });
     }
   };
 
@@ -213,7 +191,7 @@ const Welcome = () => {
         <p>購読ポイント: {activeNovel.subscriptionPoints}P</p>
         <p>小説購入ポイント: {activeNovel.copyrightPoints}P</p>
         <p>{activeNovel.summary}</p>
-        <button onClick={handleNovelPurchase}>購読する</button>
+        <button onClick={() => purchaseItem(activeNovel.subscriptionPoints, '購読')}>購読する</button>
         <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
       </div>
       )}

@@ -33,7 +33,8 @@ const NewNovel = () => {
       });
       const userRef = db.collection('users').doc(account);
       userRef.update({
-        ownedNovels: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+        ownedNovels: firebase.firestore.FieldValue.arrayUnion(docRef.id),
+        subscribedNovels: firebase.firestore.FieldValue.arrayUnion(docRef.id)
       });
 
       navigate('/novellist', { state: { account } });
