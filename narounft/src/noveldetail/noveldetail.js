@@ -6,6 +6,9 @@ const NovelDetails = () => {
   const location = useLocation();
   const { novel, account } = location.state;
   const navigate = useNavigate();
+  
+  // Split the novel content into separate sentences
+  const sentences = novel.content.split('。');
 
   return (
     <div>
@@ -20,7 +23,10 @@ const NovelDetails = () => {
         <p>{novel.summary}</p>
 
         <h3>本文:</h3>
-        <p>{novel.content}</p>
+        {/* Render each sentence as a separate paragraph */}
+        {sentences.map((sentence, index) => (
+          <p key={index}>{sentence}。</p>
+        ))}
       </div>
     </div>
   );

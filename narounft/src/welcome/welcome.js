@@ -40,12 +40,12 @@ const Welcome = () => {
 
   useEffect(() => {
     const userRef = db.collection('users').doc(account);
-    userRef.get().then((doc) => {
+    userRef.onSnapshot((doc) => {  // use onSnapshot to listen for updates
       if (doc.exists) {
         setPoints(doc.data().points);
-        setSubscribedNovels(doc.data().subscribedNovels || []);  // Update this line
+        setSubscribedNovels(doc.data().subscribedNovels || []);
       } else {
-        userRef.set({ points: 20, subscribedNovels: [] });  // Add subscribedNovels: [] here
+        userRef.set({ points: 20, subscribedNovels: [] });
       }
     });
   }, [account]);
@@ -66,7 +66,7 @@ const Welcome = () => {
     const tx = {
       from: sender,
       to: recipient,
-      value: web3.utils.toWei(amountInMATIC) // Convert from MATIC to wei
+      value: web3.utils.toWei(amountInMATIC) 
     };
   
     try {
@@ -138,26 +138,28 @@ const Welcome = () => {
       console.log(authorPoints);
       console.log(itemCost);
       await authorDoc.update({ points: authorPoints + itemCost });
-  
+      const novelDoc = db.collection('novels').doc(activeNovel.id);
+      const novelData = await novelDoc.get();
+      if (itemType === '購読') {
+        await novelDoc.update({ subscriptionCount: (novelData.data().subscriptionCount || 0) + 1 });
+      }
       // Transfer points to the author if it's a novel purchase
       if (itemType === '小説を購入する') {
         console.log("小説を購入");
         
            // Update the novel's owner in the novels collection
           const novelDoc = db.collection('novels').doc(activeNovel.id);
-          await novelDoc.update({ userId: account });
+          await novelDoc.update({ userId: account ,purchaseCount: (novelData.data().purchaseCount || 0) + 1});
       
           // Remove the novel from the previous owner's ownedNovels array
           const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
           await previousOwnerDoc.update({
-            ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id)
+            ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id),
           });
       
           // Add the novel to the new owner's ownedNovels array
-          const userDoc = db.collection('users').doc(account);
-          await userDoc.update({
-            ownedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
-          });
+          const userDoc = db.collection('users').doc(account); 
+      await userDoc.update({points: points - itemCost, subscribedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id) });
       }
       const tempActiveNovel = activeNovel;
       setActiveNovel(null);
