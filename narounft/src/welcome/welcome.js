@@ -60,13 +60,15 @@ const Welcome = () => {
   }, [])
 
   const sendMATIC = async (recipient, amountInMATIC) => {
+    console.log("amountInMATIC");
+    console.log(amountInMATIC);
     const accounts = await web3.eth.getAccounts(); // Get user's accounts from MetaMask
     const sender = accounts[0]; // Use the first account as the sender
   
     const tx = {
       from: sender,
       to: recipient,
-      value: web3.utils.toWei(amountInMATIC) 
+      value: web3.utils.toWei(amountInMATIC, 'ether') 
     };
   
     try {
@@ -95,13 +97,7 @@ const Welcome = () => {
   };
 
   const openPopup = (novel) => {
-    if (subscribedNovels.includes(novel.id)) {
-      // 既に購読している小説の場合、直接小説のページへ遷移します。
-      navigate(`/noveldetails`, { state: { account ,novel} });
-    } else {
-      // 初めて購読する小説の場合、ポイントとイーサリアムの取引が行われます。
-      setActiveNovel(novel);
-    }
+    setActiveNovel(novel);
   };
 
   const closePopup = () => {
@@ -117,14 +113,25 @@ const Welcome = () => {
     if (points < itemCost) {
       setErrorMessage(`ポイントが足りません！ ${itemType}には${itemCost}Pが必要です。`);
     } else {
+      // Confirm the transaction with the user
+      const userResponse = window.confirm(`${itemType}を購入しますか？`);
+
+      // If the user chooses 'Cancel', then return from the function
+      if (!userResponse) {
+        return;
+      }
+
+      // If the user chooses 'OK', continue with the transaction
       setPoints(prevPoints => prevPoints - itemCost);
-      alert(`${itemType}`);
-      const userDoc = db.collection('users').doc(account); // Firestoreのドキュメント参照を取得
-      await userDoc.update({points: points - itemCost,subscribedNovels: activeNovel.id });
+      const userDoc = db.collection('users').doc(account); 
+      await userDoc.update({
+        points: points - itemCost, 
+        subscribedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id)
+      });
       console.log(itemCost);
       console.log("itemtypeを判断する");
       console.log(itemType);
-  
+
       // Send MATIC transaction here.
       const maticAmount = parseFloat(itemCost) / 1000; // 
       console.log(maticAmount);
@@ -147,19 +154,19 @@ const Welcome = () => {
       if (itemType === '小説を購入する') {
         console.log("小説を購入");
         
-           // Update the novel's owner in the novels collection
-          const novelDoc = db.collection('novels').doc(activeNovel.id);
-          await novelDoc.update({ userId: account ,purchaseCount: (novelData.data().purchaseCount || 0) + 1});
-      
-          // Remove the novel from the previous owner's ownedNovels array
-          const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
-          await previousOwnerDoc.update({
-            ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id),
-          });
-      
-          // Add the novel to the new owner's ownedNovels array
-          const userDoc = db.collection('users').doc(account); 
-      await userDoc.update({points: points - itemCost, subscribedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id) });
+        // Update the novel's owner in the novels collection
+        const novelDoc = db.collection('novels').doc(activeNovel.id);
+        await novelDoc.update({ userId: account ,purchaseCount: (novelData.data().purchaseCount || 0) + 1});
+    
+        // Remove the novel from the previous owner's ownedNovels array
+        const previousOwnerDoc = db.collection('users').doc(activeNovel.userId);
+        await previousOwnerDoc.update({
+          ownedNovels: firebase.firestore.FieldValue.arrayRemove(activeNovel.id),
+        });
+    
+        // Add the novel to the new owner's ownedNovels array
+        const userDoc = db.collection('users').doc(account); 
+        await userDoc.update({points: points - itemCost, subscribedNovels: firebase.firestore.FieldValue.arrayUnion(activeNovel.id) });
       }
       const tempActiveNovel = activeNovel;
       setActiveNovel(null);
@@ -187,16 +194,25 @@ const Welcome = () => {
 
       {activeNovel && (
         <div className={styles.popup}>
-        <button className="close-btn" onClick={closePopup}>閉じる</button>
-        <h2>{activeNovel.title}</h2>
-        <p>{activeNovel.description}</p>
-        <p>購読ポイント: {activeNovel.subscriptionPoints}P</p>
-        <p>小説購入ポイント: {activeNovel.copyrightPoints}P</p>
-        <p>{activeNovel.summary}</p>
-        <button onClick={() => purchaseItem(activeNovel.subscriptionPoints, '購読')}>購読する</button>
-        <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
-      </div>
-      )}
+          <button className="close-btn" onClick={closePopup}>閉じる</button>
+          <h2>{activeNovel.title}</h2>
+          <p>{activeNovel.description}</p>
+          <p>購読ポイント: {activeNovel.subscriptionPoints}P</p>
+          <p>小説購入ポイント: {activeNovel.copyrightPoints}P</p>
+          <p>{activeNovel.summary}</p>
+          {subscribedNovels.includes(activeNovel.id) ? (
+            <>
+              <button onClick={() => navigate(`/noveldetails`, { state: { account, novel: activeNovel } })}>読む(無料)</button>
+              <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => purchaseItem(activeNovel.subscriptionPoints, '購読')}>購読する</button>
+              <button onClick={() => purchaseItem(activeNovel.copyrightPoints, '小説を購入する')}>小説を購入する</button>
+            </>
+          )}
+            </div>
+          )}
 
       {activeNFT && (
         <div className={styles.popup}>
